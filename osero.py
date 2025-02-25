@@ -61,11 +61,13 @@ def place_piece(row, col, player):
             r += dr
             c += dc
         
+        # 相手の石に挟まれて自分の石が来る場合、石を裏返す
         if 0 <= r < 8 and 0 <= c < 8 and board[r][c] == player:
             for fr, fc in stones_to_flip:
                 board[fr][fc] = player  # 石を裏返す
     
     return get_move_notation(row, col)
+
 
 def count_stones():
     black, white = 0, 0
