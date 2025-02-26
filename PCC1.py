@@ -3,7 +3,7 @@ import serial
 import time
 from GameLogicPCC2 import board, place_piece, is_valid_move, check_game_end, has_valid_moves
 
-ESP32_COM_PORT = "COM12"
+ESP32_COM_PORT = "COM13"
 BAUD_RATE = 115200
 
 def setup_serial():
@@ -14,7 +14,7 @@ def setup_serial():
         print(f"Connected to ESP32 on {ESP32_COM_PORT} at {BAUD_RATE} baud")
         return esp32
     except serial.SerialException:
-        print("Could not connect to ESP32. Check Bluetooth pairing & COM port (COM12).")
+        print("Could not connect to ESP32. Check Bluetooth pairing & COM port (COM13).")
         return None
 
 esp32 = setup_serial()
@@ -91,7 +91,6 @@ while running:
                         current_player = next_player
                 else:
                     print("Invalid move or no flipping occurred.")
-
 pygame.quit()
 if esp32:
     esp32.close()
