@@ -2,15 +2,20 @@
 
 ## 概要
 このプロジェクトは、Python (Pygame) を使用してオセロ (リバーシ) を実装し、ESP32 との通信を行うシステムです。
-ゲームロジックとGUIを備えており、プレイヤーの操作がESP32に送信されます。
+ゲームロジックとその実装を備えており、プレイヤーの操作がESP32に送信されます。
 
-## ファイル構成
+## ファイル構成１
 ```
 ├── GameLogicPCC2.py  # ゲームのロジック
 ├── PCC1.py            # PygameによるGUIとESP32通信
 └── __pycache__/       # Pythonのキャッシュフォルダ
 ```
-
+## ファイル構成２
+```
+├── ESP32receiver.ino  # Pygameから信号を取得
+├── LED_control.cpp    # PygameによるLEDの操作
+└── LED_control.h      # ESP32Receiverからの信号をLED_controlへ繋ぐ
+```
 ### `GameLogicPCC2.py`
 - 盤面の初期化
 - 有効な手の判定 (`is_valid_move`)
@@ -27,6 +32,7 @@
 以下のライブラリをインストールしてください。
 ```sh
 pip install pygame pyserial
+FastLED.h
 ```
 
 ### ESP32との接続
@@ -34,7 +40,7 @@ ESP32とBluetoothで通信するため、適切なCOMポートを設定してく
 デフォルトは `COM12` です。
 
 ```python
-ESP32_COM_PORT = "COM12"  # 必要に応じて変更
+ESP32_COM_PORT = "COM13"  # 必要に応じて変更
 BAUD_RATE = 115200
 ```
 
@@ -46,8 +52,5 @@ BAUD_RATE = 115200
 
 ## 注意事項
 - Pygameのウィンドウを閉じるとゲームが終了します。
-- ESP32と接続していない場合、通信機能は動作しません。
-
-## ライセンス
-このプロジェクトはMITライセンスのもとで提供されます。
+- LEDところに少し誤作動があるため、デバッグが必要です。
 
