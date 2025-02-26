@@ -1,66 +1,66 @@
 import pygame
 import serial
 import time
+from GameLogicPCC2 import board, place_piece, is_valid_move, check_game_end, has_valid_moves
 
-# Setup Bluetooth Serial Connection
-ESP32_COM_PORT = "COM5"  # Change this based on your PC's Bluetooth COM port
+ESP32_COM_PORT = "COM12"
 BAUD_RATE = 115200
 
-try:
-    esp32 = serial.Serial(ESP32_COM_PORT, BAUD_RATE, timeout=1)
-    time.sleep(2)  # Give time to establish connection
-    print("Connected to ESP32 Bluetooth")
-except serial.SerialException:
-    print("Could not connect to ESP32. Check Bluetooth pairing & COM port.")
-    esp32 = None
+def setup_serial():
+    """ Establish a Bluetooth Serial connection to ESP32 via COM12 """
+    try:
+        esp32 = serial.Serial(ESP32_COM_PORT, BAUD_RATE, timeout=1)
+        time.sleep(5)  # Give time to establish connection(looks like 5 is enough)
+        print(f"Connected to ESP32 on {ESP32_COM_PORT} at {BAUD_RATE} baud")
+        return esp32
+    except serial.SerialException:
+        print("Could not connect to ESP32. Check Bluetooth pairing & COM port (COM12).")
+        return None
 
-# Initialize Pygame
+esp32 = setup_serial()
+
 pygame.init()
 
-# Screen size
 WIDTH, HEIGHT = 400, 400
 ROWS, COLS = 8, 8
 CELL_SIZE = WIDTH // COLS
 
-# Colors
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 GREEN = (0, 128, 0)
 
-# Create game window
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Othello")
 
-# Othello board (0: empty, 1: white, 2: black)
-board = [[0] * COLS for _ in range(ROWS)]
-board[3][3] = board[4][4] = 1  # White pieces
-board[3][4] = board[4][3] = 2  # Black pieces
-
-# Draw board
 def draw_board():
+    """ Draws the Othello board from the 'board' array in GameLogicPCC21 """
     screen.fill(GREEN)
     for row in range(ROWS):
         for col in range(COLS):
             rect = pygame.Rect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE)
             pygame.draw.rect(screen, BLACK, rect, 2)
 
-            if board[row][col] == 1:
-                pygame.draw.circle(screen, WHITE, rect.center, CELL_SIZE//3)
-            elif board[row][col] == 2:
-                pygame.draw.circle(screen, BLACK, rect.center, CELL_SIZE//3)
+            if board[row][col] == 1:  # White piece
+                pygame.draw.circle(screen, WHITE, rect.center, CELL_SIZE // 3)
+            elif board[row][col] == 2:  # Black piece
+                pygame.draw.circle(screen, BLACK, rect.center, CELL_SIZE // 3)
 
     pygame.display.update()
 
-# Convert board position to move notation (e.g., (3, 4) → "D4")
-def get_move_notation(row, col):
-    col_letters = "ABCDEFGH"
-    return f"{col_letters[col]}{row+1}"
+def send_move_to_esp32(move_notation):
+    """ Sends a move (e.g., 'D4') to the ESP32 via Bluetooth Serial """
+    if esp32 and esp32.is_open:
+        try:
+            esp32.write(move_notation.encode() + b"\n")
+            print(f"Sent move to ESP32: {move_notation}")
+        except serial.SerialException:
+            print("Bluetooth error: Failed to send data. Check connection.")
 
-# Main game loop
 running = True
-current_player = 2  # Black starts
+current_player = 2  # Starting with Black pieces
+
 while running:
-    draw_board()
+    draw_board()  #Show the latest board
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -68,21 +68,31 @@ while running:
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             x, y = event.pos
-            col, row = x // CELL_SIZE, y // CELL_SIZE
+            col = x // CELL_SIZE
+            row = y // CELL_SIZE
 
-            if board[row][col] == 0:  # Only allow move on empty spaces
-                board[row][col] = current_player
-                move_notation = get_move_notation(row, col)
-                print(f"Move: {move_notation}")
+            if is_valid_move(row, col, current_player):
+                move_notation = place_piece(row, col, current_player)
+                if move_notation:
+                    print(f"Move made: {move_notation}")
 
-                # Send move to ESP32 via Bluetooth
-                if esp32:
-                    esp32.write(move_notation.encode())
-                    print(f"Sent: {move_notation}")
+                    send_move_to_esp32(move_notation)
 
-                # Switch player
-                current_player = 1 if current_player == 2 else 2
+                    # Check if game ended
+                    result = check_game_end()
+                    if result:
+                        print("Game Over:", result)
+                        running = False
+                        break
+
+                    # Switch to next player if they have moves(Player configuration)
+                    next_player = 3 - current_player
+                    if has_valid_moves(next_player):
+                        current_player = next_player
+                else:
+                    print("Invalid move or no flipping occurred.")
 
 pygame.quit()
 if esp32:
     esp32.close()
+    print("Bluetooth connection closed.")
