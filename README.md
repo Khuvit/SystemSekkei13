@@ -4,13 +4,13 @@
 このプロジェクトは、Python (Pygame) を使用してオセロ (リバーシ) を実装し、ESP32 との通信を行うシステムです。
 ゲームロジックとその実装を備えており、プレイヤーの操作がESP32に送信されます。
 
-## ファイル構成１
+## ファイル構成１（Pythonでの処理）
 ```
 ├── GameLogicPCC2.py  # ゲームのロジック
 ├── PCC1.py            # PygameによるGUIとESP32通信
 └── __pycache__/       # Pythonのキャッシュフォルダ
 ```
-## ファイル構成２
+## ファイル構成２(ESPでの処理)
 ```
 ├── ESP32receiver.ino  # Pygameから信号を取得
 ├── LED_control.cpp    # PygameによるLEDの操作
