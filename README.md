@@ -12,6 +12,7 @@
 ```
 ## ファイル構成２(ESPでの処理)
 ```
+ESP32Receiving
 ├── ESP32receiver.ino  # Pygameから信号を取得
 ├── LED_control.cpp    # PygameによるLEDの操作
 └── LED_control.h      # ESP32Receiverからの信号をLED_controlへ繋ぐ
